@@ -16,6 +16,8 @@
 
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+#include <fstream>
 #include "runlength.h"
 
 std::string ToUpper(std::string text){
@@ -37,11 +39,37 @@ int main(int argc, char *argv[]){
   std::string huffmanParam = ToUpper(argv[7]);
   std::string runlParam = ToUpper(argv[8]);
 
+  std::ifstream input;
+  std::ofstream output;
+
+  input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  try{
+    input.open(argv[2]);
+  }
+  catch(std::ifstream::failure e){
+    std::cout << "Erro: Arquivo de entrada inválido." << std::endl;
+    std::cout << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  output.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  try{
+    output.open(argv[4], std::ofstream::binary | std::ofstream::trunc);
+  }
+  catch(std::ofstream::failure e){
+    std::cout << "Erro: Arquivo de saída inválido." << std::endl;
+    std::cout << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
+
+
   bool bwt;
   bool huffman;
   bool runl;
 
-  std::string result;
+  std::stringstream buffer;
+  buffer << input.rdbuf();
+  std::string result(buffer.str());
 
   if(bwtParam.find("TRUE") != std::string::npos){
     bwt = true;
@@ -75,14 +103,17 @@ int main(int argc, char *argv[]){
   }
 
   if(bwt){
-    //text = btw(text);
+    //result = btw(result);
   }
   if(huffman){
-    //text = huffman(text);
+    //result = huffman(result);
   }
   if(runl){
-
+    //result = runl(result);
   }
+
+  input.close();
+  output.close();
 
   return EXIT_SUCCESS;
 }

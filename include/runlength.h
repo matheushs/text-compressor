@@ -19,6 +19,9 @@ public:
       if(*it == last){                                                  //contando até que encontra um diferente,
         count++;                                                        //então será adicionado na string de retorno
       } else{
+        //std::stringbuffer buffer;
+        //buffer << count;
+        //encoded += buffer.str() + last;
         encoded += (std::to_string(count) + last);  //NOTE: MinGW não suporta 'to_string', deve rodar no Linux
         count = 0;
       }
