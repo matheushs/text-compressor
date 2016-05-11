@@ -22,7 +22,13 @@
 
 std::string ToUpper(std::string text){
   std::string result;
-  std::transform(text.begin(), text.end(), result, toupper);
+  //std::transform(text.begin(), text.end(), result, toupper);
+  char c[2] = "a";
+  for (std::string::iterator it = text.begin(); it != text.end(); ++it)
+  {
+	  c[0] = toupper(*it);
+	  result.append(c);
+  }
   return result;
 }
 
