@@ -9,43 +9,58 @@
 
 class RunLength {
 public:
-  std::string Encode(std::string text){
-    int count = 0;
-    char last = text[0];
-    std::string encoded;
+	std::string Encode(std::string text) {
+		unsigned char count = 0;
+		char last = text[0];
+		std::string encoded;
 
-    //Loop que realiza a codificação
-    for(std::string::iterator it=text.begin()+1; it!=text.end(); it++){ //Começa a partir do segundo caracter,
-      if(*it == last){                                                  //contando até que encontra um diferente,
-        count++;                                                        //então será adicionado na string de retorno
-      } else{
-        //std::stringbuffer buffer;
-        //buffer << count;
-        //encoded += buffer.str() + last;
-        encoded += (std::to_string(count) + last);  //NOTE: MinGW não suporta 'to_string', deve rodar no Linux
-        count = 0;
-      }
-    }
+		//Loop que realiza a codificação
 
-    return encoded;
-  }
+		// Começa a partir do segundo caracter,
+		// Contando até que encontra um diferente,
+		// Então será adicionado na string de retorno
+		for (std::string::iterator it = text.begin() + 1; it != text.end(); it++) {
+			if (*it == last) {
+				count++;
+			}
+			else {
+				//std::stringbuffer buffer;
+				//buffer << count;
+				//encoded += buffer.str() + last;
+				encoded += count;
+				encoded += last;
+				count = 0;
+				last = *it;
+			}
+		}
 
-  std::string Decode(std::string text){
-    std::string decoded;
-    int loop;
-    char letter;
+		return encoded;
+	}
 
-    //Loop que realiza a decodificação
-    for(std::string::iterator it = text.begin(); it != text.end(); it+2){ //A string segue o exemplo abaixo:
-      letter = *it;                                                       //[0,5,1,2,0,13]
-      loop = *it+1;                                                       //Para decodificar, os caracteres ficam nas
-        for(int i = 0; i < loop; i++){                                    //posições pares, e a quantidade nas impares:
-          decoded += letter;                                              //{0,5} -> 00000
-        }                                                                 //00000 é concatenado na string de retorno
-    }
+	std::string Decode(std::string text) {
+		std::string decoded;
+		unsigned char loop;
+		char letter;
 
-    return decoded;
-  }
+		// Loop que realiza a decodificação
+
+		// A string segue o exemplo abaixo:
+		// [0,5,1,2,0,13]
+		// Para decodificar, os caracteres ficam nas
+		// Posições pares, e a quantidade nas impares:
+		// {0,5} -> 00000
+		// 00000 é concatenado na string de retorno
+
+		for (std::string::iterator it = text.begin(); it != text.end(); it + 2) {
+			letter = *it + 1;
+			loop = *it;
+			for (unsigned char i = 0; i < loop; i++) {
+				decoded += letter;
+			}
+		}
+
+		return decoded;
+	}
 
 private:
 };
