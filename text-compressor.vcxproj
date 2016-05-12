@@ -112,11 +112,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\bwt.cpp" />
+    <ClCompile Include="src\huffman.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\runlength.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\bwt.h" />
     <ClInclude Include="include\huffman.h" />
     <ClInclude Include="include\runlength.h" />
+    <ClInclude Include="include\settings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

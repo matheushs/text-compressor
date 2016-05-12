@@ -18,108 +18,143 @@
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include "settings.h"
 #include "runlength.h"
 
-std::string ToUpper(std::string text){
-  std::string result;
-  //std::transform(text.begin(), text.end(), result, toupper);
-  char c[2] = "a";
-  for (std::string::iterator it = text.begin(); it != text.end(); ++it)
-  {
-	  c[0] = toupper(*it);
-	  result.append(c);
-  }
-  return result;
+
+std::string ToUpper(char* text) {
+	std::string result;
+	char c[2] = "0";
+	while (*text)
+	{
+		c[0] = toupper(*text);
+		result.append(c);
+		text++;
+	}
+	return result;
 }
 
-int main(int argc, char *argv[]){
-  if(argc < 9) {
-    std::cout << "Error: Missing Arguments" << std::endl;
-    return EXIT_FAILURE;
-  }
+#define MIN_ARGS 8
+#define INPUT_ARG "-i"
+#define OUTPUT_ARG "-o"
+#define BWT_ARG "--bwt="
+#define TXT_BLOCK_ARG "--txtblck="
+#define HUFFMAN_ARG "--huffman="
+#define RUN_LENGTH_ARG "--runl="
 
-  //TODO: Pegar texto dos arquivos (fstream e stringstream)
-  std::string inputFile = argv[2];
-  std::string outputFile = argv[4];
-  std::string bwtParam = ToUpper(argv[5]);
-  std::string huffmanParam = ToUpper(argv[7]);
-  std::string runlParam = ToUpper(argv[8]);
+void ReadArgs(Settings& settings, int argc, char* argv[])
+{
+	if (argc < MIN_ARGS + 1)
+	{
+		std::cerr << "Error: Missing arguments" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
-  std::ifstream input;
-  std::ofstream output;
+	for (int i = 1; i < argc; i++)
+	{
+		std::string param(argv[i]);
+		if (param.find(INPUT_ARG) != std::string::npos)
+		{
+			i++;
+			if (i < argc)
+			{
+				settings.inputFilename = std::string(argv[i]);
+				settings.input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+				try {
+					settings.input.open(argv[i]);
+				}
+				catch (std::ifstream::failure e) {
+					std::cerr << "Error: Opening input file" << std::endl;
+					std::cerr << e.what() << std::endl;
+					exit(EXIT_FAILURE);
+				}
+			}
+			else
+			{
+				std::cerr << "Error: Missing arguments" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+		else if (param.find(OUTPUT_ARG) != std::string::npos)
+		{
+			i++;
+			if (i < argc)
+			{
+				settings.outputFilename = std::string(argv[i]);
+				settings.output.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+				try {
+					settings.output.open(argv[i], std::ofstream::binary | std::ofstream::trunc);
+				}
+				catch (std::ofstream::failure e) {
+					std::cerr << "Error: Opening output file" << std::endl;
+					std::cerr << e.what() << std::endl;
+					exit(EXIT_FAILURE);
+				}
+			}
+			else
+			{
+				std::cerr << "Error: Missing arguments" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+		else
+		{
+			bool paramBool = false;
+			size_t pos;
+			std::string paramUpper = ToUpper(argv[i]);
 
-  input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  try{
-    input.open(argv[2]);
-  }
-  catch(std::ifstream::failure e){
-    std::cout << "Erro: Arquivo de entrada inválido." << std::endl;
-    std::cout << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
+			if (paramUpper.find("TRUE") != std::string::npos) {
+				paramBool = true;
+			}
+			else if (paramUpper.find("FALSE") != std::string::npos) {
+				paramBool = false;
+			}
+			else if (param.find(TXT_BLOCK_ARG) == std::string::npos) {
+				std::cerr << "Error: Invalid parameter. Expected: True|False" << std::endl;
+				exit(EXIT_FAILURE);
+			}
 
-  output.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-  try{
-    output.open(argv[4], std::ofstream::binary | std::ofstream::trunc);
-  }
-  catch(std::ofstream::failure e){
-    std::cout << "Erro: Arquivo de saída inválido." << std::endl;
-    std::cout << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
+			if (param.find(BWT_ARG) != std::string::npos)
+				settings.bwt = paramBool;
+			else if ((pos = param.find(TXT_BLOCK_ARG)) != std::string::npos)
+			{
+				const char* txtBlockSize = &param.c_str()[pos + strlen(TXT_BLOCK_ARG)];
+				settings.textBlockSize = std::atoi(txtBlockSize);
+			}
+			else if (param.find(HUFFMAN_ARG) != std::string::npos)
+				settings.huffman = paramBool;
+			else if (param.find(RUN_LENGTH_ARG) != std::string::npos)
+				settings.runLength = paramBool;
+			else
+			{
+				std::cerr << "Error: Invalid parameter." << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+}
+
+int main(int argc, char *argv[]) {
+
+	Settings settings;
+
+	ReadArgs(settings, argc, argv);
 
 
-  bool bwt;
-  bool huffman;
-  bool runl;
+	std::string encode, decode;
 
-  std::stringstream buffer;
-  buffer << input.rdbuf();
-  std::string result(buffer.str());
+	if (settings.bwt) {
+		//result = btw(result);
+	}
+	if (settings.huffman) {
+		//result = huffman(result);
+	}
+	if (settings.runLength) {
+		//result = runl(result);
+	}
 
-  if(bwtParam.find("TRUE") != std::string::npos){
-    bwt = true;
-  }else if (bwtParam.find("FALSE") != std::string::npos){
-    bwt = false;
-  }else {
-    std::cout << "Error: Invalid Parameter for BWT. Expected: True|False" << std::endl;
-    return EXIT_FAILURE;
-  }
+	settings.input.close();
+	settings.output.close();
 
-  //TODO: Checar por erros no textBlock
-  std::string::size_type sz;
-  int txtBlck = std::stoi(argv[6], &sz);
-
-  if(huffmanParam.find("TRUE") != std::string::npos){
-    huffman = true;
-  }else if (huffmanParam.find("FALSE") != std::string::npos){
-    huffman = false;
-  }else {
-    std::cout << "Error: Invalid Parameter for Huffman. Expected: True|False" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if(runlParam.find("TRUE") != std::string::npos){
-    runl = true;
-  }else if (runlParam.find("FALSE") != std::string::npos){
-    runl = false;
-  }else {
-    std::cout << "Error: Invalid Parameter for Run-Length. Expected: True|False" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if(bwt){
-    //result = btw(result);
-  }
-  if(huffman){
-    //result = huffman(result);
-  }
-  if(runl){
-    //result = runl(result);
-  }
-
-  input.close();
-  output.close();
-
-  return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
