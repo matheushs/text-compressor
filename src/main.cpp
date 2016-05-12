@@ -20,7 +20,12 @@
 #include <fstream>
 #include "settings.h"
 #include "runlength.h"
+#include "huffman.h"
+#include "bwt.h"
 
+#ifndef ENCODE
+#define ENCODE 1
+#endif // !ENCODE
 
 std::string ToUpper(char* text) {
 	std::string result;
@@ -134,23 +139,96 @@ void ReadArgs(Settings& settings, int argc, char* argv[])
 	}
 }
 
+void WriteFile(Settings& settings, std::string& string)
+{
+	settings.output.seekp(0);
+	settings.output.clear();
+	settings.output.seekp(0);
+	settings.output.write(string.c_str(), string.size());
+}
+
 int main(int argc, char *argv[]) {
 
 	Settings settings;
 
 	ReadArgs(settings, argc, argv);
 
+	std::string bwtString, huffmanString, runlString;
 
-	std::string encode, decode;
-
-	if (settings.bwt) {
-		//result = btw(result);
+	if (ENCODE == 1)
+	{
+		if (settings.bwt)
+		{
+			BWT bwt(settings, true);
+			bwt.Encode(bwtString);
+		}
+		if (settings.huffman)
+		{
+			if (settings.bwt)
+			{
+				Huffman huffman(bwtString);
+				huffman.Encode(huffmanString);
+			}
+			else
+			{
+				Huffman huffman(settings, true);
+				huffman.Encode(huffmanString);
+			}
+		}
+		else if (settings.bwt)
+			huffmanString = bwtString;
+		if (settings.runLength)
+		{
+			if (!settings.bwt && !settings.huffman)
+				RunLength::EncodeFromFile(settings, runlString);
+			else
+				RunLength::Encode(huffmanString, runlString);
+		}
+		else if (!settings.bwt && !settings.huffman)
+			return EXIT_FAILURE;
+		else
+			runlString = huffmanString;
+		WriteFile(settings, runlString);
 	}
-	if (settings.huffman) {
-		//result = huffman(result);
-	}
-	if (settings.runLength) {
-		//result = runl(result);
+	else
+	{
+		if (settings.runLength)
+		{
+			RunLength::DecodeFromFile(settings, runlString);
+		}
+		if (settings.huffman)
+		{
+			if (settings.runLength)
+			{
+				Huffman huffman(runlString);
+				huffman.Decode(huffmanString);
+			}
+			else
+			{
+				Huffman huffman(settings, false);
+				huffman.Decode(huffmanString);
+			}
+		}
+		else if (settings.runLength)
+			huffmanString = runlString;
+		if (settings.bwt)
+		{
+			if (!settings.bwt && !settings.huffman)
+			{
+				BWT bwt(settings, false);
+				bwt.Decode(bwtString);
+			}
+			else
+			{
+				BWT bwt(huffmanString);
+				bwt.Decode(bwtString);
+			}
+		}
+		else if (!settings.runLength && !settings.huffman)
+			return EXIT_FAILURE;
+		else
+			bwtString = huffmanString;
+		WriteFile(settings, bwtString);
 	}
 
 	settings.input.close();

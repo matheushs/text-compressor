@@ -2,10 +2,10 @@
 
 #include "runlength.h"
 
-std::string RunLength::Encode(std::string text) {
+void RunLength::Encode(std::string text, std::string& out)
+{
 	unsigned char count = 0;
 	char last = text[0];
-	std::string encoded;
 
 	//Loop que realiza a codificação
 
@@ -17,21 +17,16 @@ std::string RunLength::Encode(std::string text) {
 			count++;
 		}
 		else {
-			//std::stringbuffer buffer;
-			//buffer << count;
-			//encoded += buffer.str() + last;
-			encoded += count;
-			encoded += last;
+			out += last;
+			out += count;
 			count = 0;
 			last = *it;
 		}
 	}
-
-	return encoded;
 }
 
-std::string RunLength::Decode(std::string text) {
-	std::string decoded;
+void RunLength::Decode(std::string text, std::string& out)
+{
 	unsigned char loop;
 	char letter;
 
@@ -44,23 +39,48 @@ std::string RunLength::Decode(std::string text) {
 	// {0,5} -> 00000
 	// 00000 é concatenado na string de retorno
 
-	for (std::string::iterator it = text.begin(); it != text.end(); it + 2) {
-		letter = *it + 1;
-		loop = *it;
+	for (std::string::iterator it = text.begin(); it != text.end(); it++) {
+		letter = *it;
+		loop = *(++it);
 		for (unsigned char i = 0; i < loop; i++) {
-			decoded += letter;
+			out += letter;
 		}
 	}
-
-	return decoded;
 }
 
-void RunLength::EncodeFromFile(Settings& settings, std::string& out, bool writeFile)
+void RunLength::EncodeFromFile(Settings& settings, std::string& out)
 {
+	settings.input.seekg(0);
 
+	unsigned char count = 0;
+	char last = settings.input.get();
+	
+	while (settings.input.eof()) {
+		char c = settings.input.get();
+		if (c == last && count < UCHAR_MAX) {
+			count++;
+		}
+		else {
+			out += count;
+			out += last;
+			count = 0;
+			last = c;
+		}
+	}
 }
 
-void RunLength::DecodeFromFile(Settings& settings, std::string& out, bool writeFile)
+void RunLength::DecodeFromFile(Settings& settings, std::string& out)
 {
+	settings.input.seekg(0);
 
+	unsigned char loop;
+	char letter;
+
+	while (!settings.input.eof()) {
+		letter = settings.input.get();
+		loop = settings.input.get();
+		for (unsigned char i = 0; i < loop; i++) {
+			out += letter;
+		}
+	}
 }
