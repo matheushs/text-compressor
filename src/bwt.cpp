@@ -1,5 +1,3 @@
-#pragma once
-
 #include "bwt.h"
 
 BWT::BWT(std::string text)

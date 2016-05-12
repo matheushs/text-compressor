@@ -1,0 +1,1 @@
+make -f encode.mk

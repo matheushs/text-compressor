@@ -1,5 +1,5 @@
 /**********************************
-* Gustavo Ceccon                  *
+* Gustavo Ceccon          8936822 *
 * Matheus Henrique Soares 8066349 *
 **********************************/
 
@@ -18,14 +18,19 @@
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 #include "settings.h"
 #include "runlength.h"
 #include "huffman.h"
 #include "bwt.h"
 
 #ifndef ENCODE
-#define ENCODE 1
+#define ENCODE 0
 #endif // !ENCODE
+
+#ifndef DECODE
+#define DECODE 0
+#endif // !DECODE
 
 std::string ToUpper(char* text) {
 	std::string result;
@@ -155,7 +160,7 @@ int main(int argc, char *argv[]) {
 
 	std::string bwtString, huffmanString, runlString;
 
-	if (ENCODE == 1)
+	if (ENCODE)
 	{
 		if (settings.bwt)
 		{
@@ -190,7 +195,7 @@ int main(int argc, char *argv[]) {
 			runlString = huffmanString;
 		WriteFile(settings, runlString);
 	}
-	else
+	else if(DECODE)
 	{
 		if (settings.runLength)
 		{

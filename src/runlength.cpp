@@ -1,5 +1,3 @@
-#pragma once
-
 #include "runlength.h"
 
 void RunLength::Encode(std::string text, std::string& out)
@@ -7,11 +5,11 @@ void RunLength::Encode(std::string text, std::string& out)
 	unsigned char count = 0;
 	char last = text[0];
 
-	//Loop que realiza a codificação
+	//Loop que realiza a codificaï¿½ï¿½o
 
-	// Começa a partir do segundo caracter,
-	// Contando até que encontra um diferente,
-	// Então será adicionado na string de retorno
+	// Comeï¿½a a partir do segundo caracter,
+	// Contando atï¿½ que encontra um diferente,
+	// Entï¿½o serï¿½ adicionado na string de retorno
 	for (std::string::iterator it = text.begin() + 1; it != text.end(); it++) {
 		if (*it == last && count < UCHAR_MAX) {
 			count++;
@@ -30,14 +28,14 @@ void RunLength::Decode(std::string text, std::string& out)
 	unsigned char loop;
 	char letter;
 
-	// Loop que realiza a decodificação
+	// Loop que realiza a decodificaï¿½ï¿½o
 
 	// A string segue o exemplo abaixo:
 	// [0,5,1,2,0,13]
 	// Para decodificar, os caracteres ficam nas
-	// Posições pares, e a quantidade nas impares:
+	// Posiï¿½ï¿½es pares, e a quantidade nas impares:
 	// {0,5} -> 00000
-	// 00000 é concatenado na string de retorno
+	// 00000 ï¿½ concatenado na string de retorno
 
 	for (std::string::iterator it = text.begin(); it != text.end(); it++) {
 		letter = *it;

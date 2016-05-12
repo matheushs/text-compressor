@@ -1,0 +1,1 @@
+make -f decode.mk

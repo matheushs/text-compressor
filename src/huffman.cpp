@@ -1,5 +1,3 @@
-#pragma once
-
 #include "huffman.h"
 
 Huffman::Huffman(std::string text)

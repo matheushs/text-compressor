@@ -12,6 +12,6 @@ public:
 	BWT(std::string text);
 	BWT(Settings& settings, bool encode);
 
-	void Encode(std::string& out, Settings* settings = nullptr);
-	void Decode(std::string& out, Settings* settings = nullptr);
+	void Encode(std::string& out);
+	void Decode(std::string& out);
 };
