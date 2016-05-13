@@ -9,9 +9,6 @@
 class BWT
 {
 public:
-	BWT(std::string text);
-	BWT(Settings& settings, bool encode);
-
-	void Encode(std::string& out);
-	void Decode(std::string& out);
+	static void Encode(Settings* settings, bool useAuxiliar = false);
+	static void Decode(Settings* settings, bool useAuxiliar = false);
 };

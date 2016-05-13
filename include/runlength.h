@@ -9,8 +9,6 @@
 class RunLength
 {
 public:
-	static void Encode(std::string text, std::string& out);
-	static void Decode(std::string text, std::string& out);
-	static void EncodeFromFile(Settings& settings, std::string& out);
-	static void DecodeFromFile(Settings& settings, std::string& out);
+	static void Encode(Settings* settings, uint64_t size, bool useAuxiliar = false);
+	static void Decode(Settings* settings, uint64_t& size, bool useAuxiliar = false);
 };

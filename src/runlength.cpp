@@ -1,84 +1,127 @@
 #include "runlength.h"
 
-void RunLength::Encode(std::string text, std::string& out)
+#include <vector>
+
+void RunLength::Encode(Settings* settings, uint64_t size, bool useAuxiliar)
 {
-	unsigned char count = 0;
-	char last = text[0];
+	uint16_t count = 0;
+	bool current = false;
+	char readByte[1];
+	uint64_t sizeRead = 0;
 
-	//Loop que realiza a codifica��o
+	std::fstream* auxiliar = new std::fstream("auxiliarRunLegth.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
-	// Come�a a partir do segundo caracter,
-	// Contando at� que encontra um diferente,
-	// Ent�o ser� adicionado na string de retorno
-	for (std::string::iterator it = text.begin() + 1; it != text.end(); it++) {
-		if (*it == last && count < UCHAR_MAX) {
-			count++;
+	if (useAuxiliar)
+		settings->auxiliar->seekg(0);
+	else
+		settings->input->seekg(0);
+
+	auxiliar->write((char*)&size, sizeof(size));
+
+	while (true)
+	{
+		if (useAuxiliar)
+		{
+			settings->auxiliar->read(readByte, 1);
+			if (settings->auxiliar->eof())
+				break;
 		}
-		else {
-			out += last;
-			out += count;
-			count = 0;
-			last = *it;
+		else
+		{
+			settings->input->read(readByte, 1);
+			if (settings->input->eof())
+				break;
 		}
+
+		for (int i = 7; i >= 0 && sizeRead + 8 - i < size; i--)
+		{
+			if (current != GETBIT(readByte[0], i))
+			{
+#ifdef DEBUG
+				std::cout << count << std::endl;
+#endif // DEBUG
+				auxiliar->write((char*)&count, 2);
+				current = !current;
+				count = 1;
+			}
+			else
+				count++;
+		}
+		sizeRead += 8;
 	}
+	auxiliar->write((char*)&count, 2);
+
+	if (settings->auxiliar != nullptr)
+	{
+		settings->auxiliar->close();
+		delete settings->auxiliar;
+	}
+	auxiliar->flush();
+	settings->auxiliar = auxiliar;
 }
 
-void RunLength::Decode(std::string text, std::string& out)
+void RunLength::Decode(Settings* settings, uint64_t& size, bool useAuxiliar)
 {
-	unsigned char loop;
-	char letter;
+	uint16_t count;
+	bool current = false;
+	char readBytes[2];
+	uint64_t sizeRead = 0;
 
-	// Loop que realiza a decodifica��o
-
-	// A string segue o exemplo abaixo:
-	// [0,5,1,2,0,13]
-	// Para decodificar, os caracteres ficam nas
-	// Posi��es pares, e a quantidade nas impares:
-	// {0,5} -> 00000
-	// 00000 � concatenado na string de retorno
-
-	for (std::string::iterator it = text.begin(); it != text.end(); it++) {
-		letter = *it;
-		loop = *(++it);
-		for (unsigned char i = 0; i < loop; i++) {
-			out += letter;
-		}
+	std::fstream* auxiliar = new std::fstream("auxiliarRunLegth.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	if (useAuxiliar)
+	{
+		settings->auxiliar->seekg(0);
+		settings->auxiliar->read((char*)&size, sizeof(size));
 	}
-}
-
-void RunLength::EncodeFromFile(Settings& settings, std::string& out)
-{
-	settings.input.seekg(0);
-
-	unsigned char count = 0;
-	char last = settings.input.get();
-	
-	while (settings.input.eof()) {
-		char c = settings.input.get();
-		if (c == last && count < UCHAR_MAX) {
-			count++;
-		}
-		else {
-			out += count;
-			out += last;
-			count = 0;
-			last = c;
-		}
+	else
+	{
+		settings->input->seekg(0);
+		settings->input->read((char*)&size, sizeof(size));
 	}
-}
 
-void RunLength::DecodeFromFile(Settings& settings, std::string& out)
-{
-	settings.input.seekg(0);
-
-	unsigned char loop;
-	char letter;
-
-	while (!settings.input.eof()) {
-		letter = settings.input.get();
-		loop = settings.input.get();
-		for (unsigned char i = 0; i < loop; i++) {
-			out += letter;
+	char writeChar = 0;
+	while (true)
+	{
+		if (useAuxiliar)
+		{
+			settings->auxiliar->read(readBytes, 2);
+			if (settings->auxiliar->eof())
+				break;
 		}
+		else
+		{
+			settings->input->read(readBytes, 2);
+			if (settings->input->eof())
+				break;
+		}
+
+		count = *((uint16_t*)&readBytes);
+#ifdef DEBUG
+		std::cout << count << std::endl;
+#endif // DEBUG
+		int shift = current == true ? 1 : 0;
+		for (int i = 0; i < count; i++)
+		{
+			int index = 7 - (sizeRead) % 8;
+			writeChar += shift << index;
+			sizeRead++;
+			if (sizeRead % 8 == 0)
+			{
+#ifdef DEBUG
+				std::cout << writeChar << std::endl;
+#endif // DEBUG
+				auxiliar->put(writeChar);
+				writeChar = 0;
+			}
+		}
+		current = !current;
 	}
+
+	if (settings->auxiliar != nullptr)
+	{
+		settings->auxiliar->close();
+		delete settings->auxiliar;
+	}
+	auxiliar->flush();
+	settings->auxiliar = auxiliar;
 }

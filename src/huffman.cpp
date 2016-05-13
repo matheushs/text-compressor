@@ -1,17 +1,9 @@
 #include "huffman.h"
 
-Huffman::Huffman(std::string text)
+void Huffman::Encode(Settings* settings, bool useAuxiliar)
 {
 }
 
-Huffman::Huffman(Settings & settings, bool encode)
-{
-}
-
-void Huffman::Encode(std::string& out)
-{
-}
-
-void Huffman::Decode(std::string& out)
+void Huffman::Decode(Settings* settings, bool useAuxiliar)
 {
 }

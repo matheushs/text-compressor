@@ -24,13 +24,18 @@
 #include "huffman.h"
 #include "bwt.h"
 
-#ifndef ENCODE
+#ifdef ENCODE
+#define ENCODE 1
+#else
 #define ENCODE 0
-#endif // !ENCODE
+#endif
 
-#ifndef DECODE
+
+#ifdef DECODE
+#define DECODE 1
+#else
 #define DECODE 0
-#endif // !DECODE
+#endif
 
 std::string ToUpper(char* text) {
 	std::string result;
@@ -67,18 +72,7 @@ void ReadArgs(Settings& settings, int argc, char* argv[])
 		{
 			i++;
 			if (i < argc)
-			{
 				settings.inputFilename = std::string(argv[i]);
-				settings.input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-				try {
-					settings.input.open(argv[i]);
-				}
-				catch (std::ifstream::failure e) {
-					std::cerr << "Error: Opening input file" << std::endl;
-					std::cerr << e.what() << std::endl;
-					exit(EXIT_FAILURE);
-				}
-			}
 			else
 			{
 				std::cerr << "Error: Missing arguments" << std::endl;
@@ -89,18 +83,7 @@ void ReadArgs(Settings& settings, int argc, char* argv[])
 		{
 			i++;
 			if (i < argc)
-			{
 				settings.outputFilename = std::string(argv[i]);
-				settings.output.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-				try {
-					settings.output.open(argv[i], std::ofstream::binary | std::ofstream::trunc);
-				}
-				catch (std::ofstream::failure e) {
-					std::cerr << "Error: Opening output file" << std::endl;
-					std::cerr << e.what() << std::endl;
-					exit(EXIT_FAILURE);
-				}
-			}
 			else
 			{
 				std::cerr << "Error: Missing arguments" << std::endl;
@@ -144,100 +127,87 @@ void ReadArgs(Settings& settings, int argc, char* argv[])
 	}
 }
 
-void WriteFile(Settings& settings, std::string& string)
-{
-	settings.output.seekp(0);
-	settings.output.clear();
-	settings.output.seekp(0);
-	settings.output.write(string.c_str(), string.size());
-}
-
 int main(int argc, char *argv[]) {
 
 	Settings settings;
-
+#ifdef DEBUG
+	settings.bwt = false;
+	settings.huffman = false;
+	settings.runLength = true;
+	settings.textBlockSize = 64;
+	if (ENCODE)
+	{
+		settings.inputFilename = "input.txt";
+		settings.outputFilename = "encoded.dat";
+	}
+	else if (DECODE)
+	{
+		settings.inputFilename = "encoded.dat";
+		settings.outputFilename = "output.txt";
+	}
+#else
 	ReadArgs(settings, argc, argv);
+#endif
 
-	std::string bwtString, huffmanString, runlString;
+	settings.input = new std::ifstream(settings.inputFilename);
+	if (settings.input->exceptions())
+	{
+		std::cerr << "Error: Opening input file" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	settings.output = new std::ofstream(settings.outputFilename, std::ofstream::binary | std::ofstream::trunc);
+	if (settings.output->exceptions())
+	{
+		std::cerr << "Error: Opening output file" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+
+	if (!settings.runLength && !settings.huffman && !settings.bwt)
+		exit(EXIT_FAILURE);
 
 	if (ENCODE)
 	{
+		uint64_t size = UINT64_MAX;
 		if (settings.bwt)
-		{
-			BWT bwt(settings, true);
-			bwt.Encode(bwtString);
-		}
+			BWT::Encode(&settings);
 		if (settings.huffman)
-		{
-			if (settings.bwt)
-			{
-				Huffman huffman(bwtString);
-				huffman.Encode(huffmanString);
-			}
-			else
-			{
-				Huffman huffman(settings, true);
-				huffman.Encode(huffmanString);
-			}
-		}
-		else if (settings.bwt)
-			huffmanString = bwtString;
+			Huffman::Encode(&settings, settings.runLength);
 		if (settings.runLength)
-		{
-			if (!settings.bwt && !settings.huffman)
-				RunLength::EncodeFromFile(settings, runlString);
-			else
-				RunLength::Encode(huffmanString, runlString);
-		}
-		else if (!settings.bwt && !settings.huffman)
-			return EXIT_FAILURE;
-		else
-			runlString = huffmanString;
-		WriteFile(settings, runlString);
+			RunLength::Encode(&settings, settings.huffman ? size : UINT64_MAX, settings.bwt || settings.huffman);
 	}
-	else if(DECODE)
+	else if (DECODE)
 	{
+		uint64_t size;
 		if (settings.runLength)
-		{
-			RunLength::DecodeFromFile(settings, runlString);
-		}
+			RunLength::Decode(&settings, size);
 		if (settings.huffman)
-		{
-			if (settings.runLength)
-			{
-				Huffman huffman(runlString);
-				huffman.Decode(huffmanString);
-			}
-			else
-			{
-				Huffman huffman(settings, false);
-				huffman.Decode(huffmanString);
-			}
-		}
-		else if (settings.runLength)
-			huffmanString = runlString;
+			Huffman::Decode(&settings, settings.runLength);
 		if (settings.bwt)
-		{
-			if (!settings.bwt && !settings.huffman)
-			{
-				BWT bwt(settings, false);
-				bwt.Decode(bwtString);
-			}
-			else
-			{
-				BWT bwt(huffmanString);
-				bwt.Decode(bwtString);
-			}
-		}
-		else if (!settings.runLength && !settings.huffman)
-			return EXIT_FAILURE;
-		else
-			bwtString = huffmanString;
-		WriteFile(settings, bwtString);
+			BWT::Decode(&settings, settings.runLength || settings.huffman);
+	}
+	else
+		std::cerr << "Error: Encode/Decode not defined" << std::endl;
+
+	settings.auxiliar->seekg(0);
+	settings.output->seekp(0);
+
+	while (!settings.auxiliar->eof())
+	{
+		char c = settings.auxiliar->get();
+		if (settings.auxiliar->eof())
+			break;
+		settings.output->put(c);
 	}
 
-	settings.input.close();
-	settings.output.close();
+	settings.auxiliar->close();
+	settings.input->close();
+	settings.output->close();
+
+	delete settings.auxiliar;
+	delete settings.input;
+	delete settings.output;
 
 	return EXIT_SUCCESS;
 }

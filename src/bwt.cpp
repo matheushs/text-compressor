@@ -1,17 +1,9 @@
 #include "bwt.h"
 
-BWT::BWT(std::string text)
+void BWT::Encode(Settings* settings, bool useAuxiliar)
 {
 }
 
-BWT::BWT(Settings & settings, bool encode)
-{
-}
-
-void BWT::Encode(std::string& out)
-{
-}
-
-void BWT::Decode(std::string& out)
+void BWT::Decode(Settings* settings, bool useAuxiliar)
 {
 }

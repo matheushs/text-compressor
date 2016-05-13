@@ -6,13 +6,18 @@
 #include <climits>
 #include "settings.h"
 
+struct Node
+{
+	struct Node* left;
+	struct Node* right;
+
+	char value;
+};
+
 class Huffman
 {
 
 public:
-	Huffman(std::string text);
-	Huffman(Settings& settings, bool encode);
-
-	void Encode(std::string& out);
-	void Decode(std::string& out);
+	static void Encode(Settings* settings, bool useAuxiliar = false);
+	static void Decode(Settings* settings, bool useAuxiliar = false);
 };
