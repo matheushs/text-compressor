@@ -12,7 +12,8 @@ struct Settings
 	bool huffman = false;
 	bool runLength = false;
 
-	int textBlockSize = 0;
+	uint32_t textBlockSize = 0;
+	uint32_t size = UINT32_MAX;
 
 	std::string inputFilename;
 	std::string outputFilename;

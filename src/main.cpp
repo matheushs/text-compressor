@@ -169,19 +169,18 @@ int main(int argc, char *argv[]) {
 
 	if (ENCODE)
 	{
-		uint64_t size = UINT64_MAX;
+		uint32_t size = UINT32_MAX;
 		if (settings.bwt)
 			BWT::Encode(&settings);
 		if (settings.huffman)
-			Huffman::Encode(&settings, settings.runLength);
+			Huffman::Encode(&settings, size, settings.runLength);
 		if (settings.runLength)
-			RunLength::Encode(&settings, settings.huffman ? size : UINT64_MAX, settings.bwt || settings.huffman);
+			RunLength::Encode(&settings, settings.huffman ? size : UINT32_MAX, settings.bwt || settings.huffman);
 	}
 	else if (DECODE)
 	{
-		uint64_t size;
 		if (settings.runLength)
-			RunLength::Decode(&settings, size);
+			RunLength::Decode(&settings);
 		if (settings.huffman)
 			Huffman::Decode(&settings, settings.runLength);
 		if (settings.bwt)

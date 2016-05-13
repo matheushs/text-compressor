@@ -2,12 +2,12 @@
 
 #include <vector>
 
-void RunLength::Encode(Settings* settings, uint64_t size, bool useAuxiliar)
+void RunLength::Encode(Settings* settings, bool useAuxiliar)
 {
 	uint16_t count = 0;
 	bool current = false;
 	char readByte[1];
-	uint64_t sizeRead = 0;
+	uint32_t sizeRead = 0;
 
 	std::fstream* auxiliar = new std::fstream("auxiliarRunLegth.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
@@ -16,7 +16,7 @@ void RunLength::Encode(Settings* settings, uint64_t size, bool useAuxiliar)
 	else
 		settings->input->seekg(0);
 
-	auxiliar->write((char*)&size, sizeof(size));
+	auxiliar->write((char*)&settings->size, sizeof(settings->size));
 
 	while (true)
 	{
@@ -33,7 +33,7 @@ void RunLength::Encode(Settings* settings, uint64_t size, bool useAuxiliar)
 				break;
 		}
 
-		for (int i = 7; i >= 0 && sizeRead + 8 - i < size; i--)
+		for (int i = 7; i >= 0 && sizeRead + 8 - i < settings->size; i--)
 		{
 			if (current != GETBIT(readByte[0], i))
 			{
@@ -60,23 +60,23 @@ void RunLength::Encode(Settings* settings, uint64_t size, bool useAuxiliar)
 	settings->auxiliar = auxiliar;
 }
 
-void RunLength::Decode(Settings* settings, uint64_t& size, bool useAuxiliar)
+void RunLength::Decode(Settings* settings, bool useAuxiliar)
 {
 	uint16_t count;
 	bool current = false;
 	char readBytes[2];
-	uint64_t sizeRead = 0;
+	uint32_t sizeRead = 0;
 
 	std::fstream* auxiliar = new std::fstream("auxiliarRunLegth.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 	if (useAuxiliar)
 	{
 		settings->auxiliar->seekg(0);
-		settings->auxiliar->read((char*)&size, sizeof(size));
+		settings->auxiliar->read((char*)&settings->size, sizeof(settings->size));
 	}
 	else
 	{
 		settings->input->seekg(0);
-		settings->input->read((char*)&size, sizeof(size));
+		settings->input->read((char*)&settings->size, sizeof(settings->size));
 	}
 
 	char writeChar = 0;
