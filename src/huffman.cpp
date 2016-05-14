@@ -1,6 +1,7 @@
 #include "huffman.h"
 
 #include <cstdlib>
+#include <cstring>
 #include <algorithm>
 
 bool SortFrequencies(Alphabet a, Alphabet b)
@@ -136,7 +137,17 @@ void Huffman::Encode(Settings* settings, bool useAuxiliar)
 
 
 	std::fstream* auxiliar = new std::fstream("auxiliarHuffman.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
-
+	
+	if(useAuxiliar)
+	{
+		settings->auxiliar->seekg(0);
+		
+	}
+	else
+	{
+		
+	}
+	
 	while (true)
 	{
 		TYPE readType;
@@ -153,12 +164,6 @@ void Huffman::Encode(Settings* settings, bool useAuxiliar)
 			if (settings->input->eof())
 				break;
 		}
-		if ((*alphabet)[(uint32_t)readType].freq == 0)
-		{
-			(*alphabet)[(uint32_t)readType].value = readType;
-			size++;
-		}
-		(*alphabet)[(uint32_t)readType].freq++;
 	}
 }
 

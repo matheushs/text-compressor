@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include <cstdlib>
 #include <cstring>
 #include "settings.h"
 #include "runlength.h"
