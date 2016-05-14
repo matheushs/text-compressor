@@ -1,3 +1,11 @@
+#Auxiliar
+auxiliarRunLength.dat
+auxiliarHuffman.dat
+auxiliarBWT.dat
+input.txt
+encoded.dat
+output.txt
+
 # Compiled Object files
 *.slo
 *.lo
@@ -35,7 +43,7 @@ lib/*
 bin/*
 
 # Atom files
-*.clang_complete
+#*.clang_complete
 
 #VSCode
 .vscode/
