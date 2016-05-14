@@ -26,7 +26,7 @@ struct Alphabet
 
 class Huffman
 {
-	static void CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, int& size, bool useAuxiliar);
+	static void CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, uint32_t& size, bool useAuxiliar);
 public:
 	static void Encode(Settings* settings, bool useAuxiliar = false);
 	static void Decode(Settings* settings, bool useAuxiliar = false);

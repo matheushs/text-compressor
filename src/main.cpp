@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 	Settings settings;
 #ifdef DEBUG
 	settings.bwt = false;
-	settings.huffman = false;
+	settings.huffman = true;
 	settings.runLength = true;
 	settings.textBlockSize = 64;
 	if (ENCODE)
@@ -169,13 +169,12 @@ int main(int argc, char *argv[]) {
 
 	if (ENCODE)
 	{
-		uint32_t size = UINT32_MAX;
 		if (settings.bwt)
 			BWT::Encode(&settings);
 		if (settings.huffman)
-			Huffman::Encode(&settings, size, settings.runLength);
+			Huffman::Encode(&settings, settings.bwt);
 		if (settings.runLength)
-			RunLength::Encode(&settings, settings.huffman ? size : UINT32_MAX, settings.bwt || settings.huffman);
+			RunLength::Encode(&settings, settings.bwt || settings.huffman);
 	}
 	else if (DECODE)
 	{

@@ -3,19 +3,43 @@
 #include <cstdlib>
 #include <algorithm>
 
-bool sortType(Alphabet a, Alphabet b)
+bool SortFrequencies(Alphabet a, Alphabet b)
 {
-	return a.value < b.value;
+	return a.freq < b.freq;
 }
 
-bool sortFrequenciesReverse(Alphabet a, Alphabet b)
+void PrintTree(Node* tree)
 {
-	return a.freq > b.freq;
+	printf("%c %d\n", tree->value, tree->freq);
+	if (tree->left)
+		PrintTree(tree->left);
+	if (tree->left)
+		PrintTree(tree->right);
 }
 
-void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, int& size, bool useAuxiliar)
+void CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint32_t size)
 {
-	*alphabet = new Alphabet[size];
+	if (!node->left && !node->right)
+	{
+		alphabet[(uint32_t)node->value].bits = (char*)calloc(size + 1, 1);
+		std::memcpy(alphabet[(uint32_t)node->value].bits, bits, size);
+	}
+	if (node->left)
+	{
+		bits[size] = '0';
+		CreateHuffmanBits(node->left, alphabet, bits, size + 1);
+	}
+	if (node->right)
+	{
+		bits[size] = '1';
+		CreateHuffmanBits(node->right, alphabet, bits, size + 1);
+	}
+
+}
+
+void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, uint32_t& size, bool useAuxiliar)
+{
+	*alphabet = (Alphabet*)calloc(ALPHABET_SIZE, sizeof(Alphabet));
 	while (true)
 	{
 		TYPE readType;
@@ -40,72 +64,102 @@ void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet
 		(*alphabet)[(uint32_t)readType].freq++;
 	}
 
-	Alphabet* alphabetCopy = new Alphabet[ALPHABET_SIZE];
+	Alphabet* alphabetCopy = (Alphabet*)calloc(ALPHABET_SIZE, sizeof(Alphabet));
 
-	std::memcpy(alphabetCopy, (*alphabet), ALPHABET_SIZE * sizeof(TYPE));
+	std::memcpy(alphabetCopy, (*alphabet), ALPHABET_SIZE * sizeof(Alphabet));
 
-	std::sort(alphabetCopy, alphabetCopy + ALPHABET_SIZE, sortFrequenciesReverse);
+	std::sort(alphabetCopy, alphabetCopy + ALPHABET_SIZE, SortFrequencies);
 
 	Node** node = (Node**)calloc(size, sizeof(Node*));
 
+	for (uint32_t i = 0; i < size; i++)
+	{
+		node[i] = new Node;
+		node[i]->freq =  (*alphabet)[(uint32_t)alphabetCopy[i + ALPHABET_SIZE - size].value].freq;
+		node[i]->value = (*alphabet)[(uint32_t)alphabetCopy[i + ALPHABET_SIZE - size].value].value;
+		node[i]->left = NULL;
+		node[i]->right = NULL;
+	}
+
 	Node* current;
 
-	for (uint32_t i = ALPHABET_SIZE - size; i < ALPHABET_SIZE - 1; i++)
+	for (uint32_t i = 0; i < size - 1; i++)
 	{
-		uint32_t index = i + size - ALPHABET_SIZE;
 		current = new Node;
-		if (node[i] == NULL)
-		{
-			node[i] = new Node;
-			node[i]->freq = (*alphabet)[index].freq;
-			node[i]->value = (*alphabet)[(uint32_t)alphabetCopy[index].value].value;
-		}
-		if (node[i + 1] == NULL)
-		{
-			node[i + 1] = new Node;
-			node[i + 1]->freq = (*alphabet)[(uint32_t)alphabetCopy[index + 1].value].freq;
-			node[i + 1]->value = (*alphabet)[(uint32_t)alphabetCopy[index + 1].value].value;
-		}
 		current->freq = node[i]->freq + node[i + 1]->freq;
-		current->left = node[i];
-		current->right = node[i + 1];
+		current->right = node[i];
+		current->left = node[i + 1];
 		node[i + 1] = current;
-		alphabetCopy[i + 1].freq = current->freq;
 
-		for (uint32_t j = i + 1; j < ALPHABET_SIZE - 1; j++)
+		for (uint32_t j = i + 1; j < size - 1; j++)
 		{
-			if (alphabetCopy[j].freq > alphabetCopy[j + 1].freq)
+			if (node[j]->freq > node[j + 1]->freq)
 			{
-				Alphabet tempAlphabet;
-				tempAlphabet.freq = alphabetCopy[j].freq;
-				tempAlphabet.value = alphabetCopy[j].value;
-				alphabetCopy[j].freq = alphabetCopy[j + 1].freq;
-				alphabetCopy[j].value = alphabetCopy[j + 1].value;
-				alphabetCopy[j + 1].freq = tempAlphabet.freq;
-				alphabetCopy[j + 1].value = tempAlphabet.value;
-				if (node[j + 1] != NULL)
-				{
-					Node tempNode;
-					tempNode.freq = node[j]->freq;
-					tempNode.value = node[j]->value;
-					node[j]->freq = node[j + 1]->freq;
-					node[j]->value = node[j + 1]->value;
-					node[j + 1]->freq = tempNode.freq;
-					node[j + 1]->value = tempNode.value;
-				}
+				Node tempNode;
+				tempNode.freq = node[j]->freq;
+				tempNode.value = node[j]->value;
+				tempNode.right = node[j]->right;
+				tempNode.left = node[j]->left;
+
+				node[j]->freq = node[j + 1]->freq;
+				node[j]->value = node[j + 1]->value;
+				node[j]->right = node[j + 1]->right;
+				node[j]->left = node[j + 1]->left;
+
+				node[j + 1]->freq = tempNode.freq;
+				node[j + 1]->value = tempNode.value;
+				node[j + 1]->right = tempNode.right;
+				node[j + 1]->left = tempNode.left;
 			}
 			else
 				break;
 		}
 	}
 	delete alphabetCopy;
-	(*root) = new Node;
-	(*root)->left = node[size - 2];
-	(*root)->right = node[size - 1];
+	(*root) = node[size - 1];
+	char* str = (char*)calloc(size, 1);
+	CreateHuffmanBits(*root, *alphabet, str, 0);
+	delete str;
 }
 
 void Huffman::Encode(Settings* settings, bool useAuxiliar)
 {
+	Node* tree;
+	Alphabet* alphabet;
+	settings->size = 0;
+	CreateHuffman(settings, &tree, &alphabet, settings->size, useAuxiliar);
+#ifdef DEBUG
+	PrintTree(tree);
+	for (uint32_t i = 0; i < ALPHABET_SIZE; i++)
+		printf("%c %s %d\n", alphabet[i].value, alphabet[i].bits, alphabet[i].freq);
+#endif // DEBUG
+
+
+	std::fstream* auxiliar = new std::fstream("auxiliarHuffman.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+
+	while (true)
+	{
+		TYPE readType;
+		if (useAuxiliar)
+		{
+
+			settings->auxiliar->read((char*)&readType, sizeof(TYPE));
+			if (settings->auxiliar->eof())
+				break;
+		}
+		else
+		{
+			settings->input->read((char*)&readType, sizeof(TYPE));
+			if (settings->input->eof())
+				break;
+		}
+		if ((*alphabet)[(uint32_t)readType].freq == 0)
+		{
+			(*alphabet)[(uint32_t)readType].value = readType;
+			size++;
+		}
+		(*alphabet)[(uint32_t)readType].freq++;
+	}
 }
 
 void Huffman::Decode(Settings* settings, bool useAuxiliar)
