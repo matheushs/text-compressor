@@ -6,50 +6,61 @@ void RunLength::Encode(Settings* settings, bool useAuxiliar)
 {
 	uint16_t count = 0;
 	bool current = false;
-	char readByte[1];
-	uint32_t sizeRead = 0;
+	char byteRead;
+	std::streampos inputSize, position;
 
-	std::fstream* auxiliar = new std::fstream("auxiliarRunLegth.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("auxiliarRunLength.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
 	if (useAuxiliar)
+	{
+		settings->auxiliar->clear();
+		settings->auxiliar->seekg(0, std::ios_base::end);
+		inputSize = settings->auxiliar->tellg();
 		settings->auxiliar->seekg(0);
+	}
 	else
+	{
+		settings->input->clear();
+		settings->input->seekg(0, std::ios_base::end);
+		inputSize = settings->input->tellg();
 		settings->input->seekg(0);
+	}
 
-	auxiliar->write((char*)&settings->size, sizeof(settings->size));
+	auxiliar->write(&settings->offset, 1);
 
 	while (true)
 	{
 		if (useAuxiliar)
 		{
-			settings->auxiliar->read(readByte, 1);
+			settings->auxiliar->read(&byteRead, 1);
 			if (settings->auxiliar->eof())
 				break;
+			position = settings->auxiliar->tellg();
 		}
 		else
 		{
-			settings->input->read(readByte, 1);
+			settings->input->read(&byteRead, 1);
 			if (settings->input->eof())
 				break;
+			position = settings->input->tellg();
 		}
 
-		for (int i = 7; i >= 0 && sizeRead + 8 - i < settings->size; i--)
+		for (int i = 7; i >= 0 && (position != inputSize || i > 7 - settings->offset); i--)
 		{
-			if (current != GETBIT(readByte[0], i))
+			if (current != GETBIT(byteRead, i))
 			{
 #ifdef DEBUG
 				std::cout << count << std::endl;
 #endif // DEBUG
-				auxiliar->write((char*)&count, 2);
+				auxiliar->write((char*)&count, sizeof(count));
 				current = !current;
 				count = 1;
 			}
 			else
 				count++;
 		}
-		sizeRead += 8;
 	}
-	auxiliar->write((char*)&count, 2);
+	auxiliar->write((char*)&count, sizeof(count));
 
 	if (settings->auxiliar != nullptr)
 	{
@@ -64,54 +75,62 @@ void RunLength::Decode(Settings* settings, bool useAuxiliar)
 {
 	uint16_t count;
 	bool current = false;
-	char readBytes[2];
-	uint32_t sizeRead = 0;
+	std::streampos inputSize, position;
+	char bitWrite = 0;
 
-	std::fstream* auxiliar = new std::fstream("auxiliarRunLegth.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("auxiliarRunLength.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 	if (useAuxiliar)
 	{
+		settings->auxiliar->clear();
+		settings->auxiliar->seekg(0, std::ios_base::end);
+		inputSize = settings->auxiliar->tellg();
 		settings->auxiliar->seekg(0);
-		settings->auxiliar->read((char*)&settings->size, sizeof(settings->size));
+		settings->auxiliar->read(&settings->offset, 1);
 	}
 	else
 	{
+		settings->input->clear();
+		settings->input->seekg(0, std::ios_base::end);
+		inputSize = settings->input->tellg();
 		settings->input->seekg(0);
-		settings->input->read((char*)&settings->size, sizeof(settings->size));
+		settings->input->read(&settings->offset, 1);
 	}
+	//auxiliar->write((char*)&settings->offset, sizeof(settings->offset));
 
-	char writeChar = 0;
+	unsigned char byteWrite = 0;
 	while (true)
 	{
 		if (useAuxiliar)
 		{
-			settings->auxiliar->read(readBytes, 2);
+			settings->auxiliar->read((char*)&count, sizeof(count));
 			if (settings->auxiliar->eof())
 				break;
+			position = settings->auxiliar->tellg();
 		}
 		else
 		{
-			settings->input->read(readBytes, 2);
+			settings->input->read((char*)&count, sizeof(count));
 			if (settings->input->eof())
 				break;
+			position = settings->input->tellg();
 		}
-
-		count = *((uint16_t*)&readBytes);
 #ifdef DEBUG
 		std::cout << count << std::endl;
 #endif // DEBUG
 		int shift = current == true ? 1 : 0;
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < count && (position != inputSize || i < settings->offset); i++)
 		{
-			int index = 7 - (sizeRead) % 8;
-			writeChar += shift << index;
-			sizeRead++;
-			if (sizeRead % 8 == 0)
+			int index = 7 - bitWrite;
+			byteWrite += shift << index;
+			bitWrite++;
+			if (bitWrite % 8 == 0)
 			{
 #ifdef DEBUG
-				std::cout << writeChar << std::endl;
+				std::cout << byteWrite << std::endl;
 #endif // DEBUG
-				auxiliar->put(writeChar);
-				writeChar = 0;
+				auxiliar->put(byteWrite);
+				byteWrite = 0;
+				bitWrite = 0;
 			}
 		}
 		current = !current;

@@ -13,7 +13,7 @@ struct Settings
 	bool runLength = false;
 
 	uint32_t textBlockSize = 0;
-	uint32_t size = UINT32_MAX;
+	char offset = 0;
 
 	std::string inputFilename;
 	std::string outputFilename;

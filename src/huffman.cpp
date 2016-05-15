@@ -4,12 +4,12 @@
 #include <cstring>
 #include <algorithm>
 
-bool SortFrequencies(Alphabet a, Alphabet b)
+bool Huffman::SortFrequencies(Alphabet a, Alphabet b)
 {
 	return a.freq < b.freq;
 }
 
-void PrintTree(Node* tree)
+void Huffman::PrintTree(Node* tree)
 {
 	printf("%c %d\n", tree->value, tree->freq);
 	if (tree->left)
@@ -18,7 +18,7 @@ void PrintTree(Node* tree)
 		PrintTree(tree->right);
 }
 
-void CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint32_t size)
+void Huffman::CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint32_t size)
 {
 	if (!node->left && !node->right)
 	{
@@ -38,31 +38,66 @@ void CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint32_t size
 
 }
 
-void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, uint32_t& size, bool useAuxiliar)
+void Huffman::WriteTree(std::fstream* file, Node* node, Alphabet* alphabet)
 {
+	bool leaf = (node->left == nullptr) & (node->right == nullptr);
+	if (leaf)
+	{
+		file->put(1);
+		file->put(node->value);
+	}
+	else
+		file->put(0);
+	if (node->left)
+		WriteTree(file, node->left, alphabet);
+	if (node->right)
+		WriteTree(file, node->right, alphabet);
+}
+
+void Huffman::ReadTree(std::istream* file, Node** node)
+{
+	char byteRead;
+	file->get(byteRead);
+	bool leaf = byteRead == 1;
+	*node = (Node*)calloc(1, sizeof(Node));
+	if (leaf)
+	{
+		file->get(byteRead);
+		(*node)->value = byteRead;
+	}
+	else
+	{
+		ReadTree(file, &(*node)->left);
+		ReadTree(file, &(*node)->right);
+	}
+}
+
+void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, bool useAuxiliar)
+{
+	uint32_t size = 0;
 	*alphabet = (Alphabet*)calloc(ALPHABET_SIZE, sizeof(Alphabet));
 	while (true)
 	{
-		TYPE readType;
+		unsigned char byteRead;
 		if (useAuxiliar)
 		{
 
-			settings->auxiliar->read((char*)&readType, sizeof(TYPE));
+			settings->auxiliar->read((char*)&byteRead, 1);
 			if (settings->auxiliar->eof())
 				break;
 		}
 		else
 		{
-			settings->input->read((char*)&readType, sizeof(TYPE));
+			settings->input->read((char*)&byteRead, 1);
 			if (settings->input->eof())
 				break;
 		}
-		if ((*alphabet)[(uint32_t)readType].freq == 0)
+		if ((*alphabet)[(uint32_t)byteRead].freq == 0)
 		{
-			(*alphabet)[(uint32_t)readType].value = readType;
+			(*alphabet)[(uint32_t)byteRead].value = byteRead;
 			size++;
 		}
-		(*alphabet)[(uint32_t)readType].freq++;
+		(*alphabet)[(uint32_t)byteRead].freq++;
 	}
 
 	Alphabet* alphabetCopy = (Alphabet*)calloc(ALPHABET_SIZE, sizeof(Alphabet));
@@ -78,8 +113,8 @@ void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet
 		node[i] = new Node;
 		node[i]->freq =  (*alphabet)[(uint32_t)alphabetCopy[i + ALPHABET_SIZE - size].value].freq;
 		node[i]->value = (*alphabet)[(uint32_t)alphabetCopy[i + ALPHABET_SIZE - size].value].value;
-		node[i]->left = NULL;
-		node[i]->right = NULL;
+		node[i]->left = nullptr;
+		node[i]->right = nullptr;
 	}
 
 	Node* current;
@@ -127,46 +162,178 @@ void Huffman::Encode(Settings* settings, bool useAuxiliar)
 {
 	Node* tree;
 	Alphabet* alphabet;
-	settings->size = 0;
-	CreateHuffman(settings, &tree, &alphabet, settings->size, useAuxiliar);
+
+	if (useAuxiliar)
+	{
+		settings->auxiliar->clear();
+		settings->auxiliar->seekg(0);
+	}
+	else
+	{
+		settings->input->clear();
+		settings->input->seekg(0);
+	}
+
+	CreateHuffman(settings, &tree, &alphabet, useAuxiliar);
 #ifdef DEBUG
 	PrintTree(tree);
-	for (uint32_t i = 0; i < ALPHABET_SIZE; i++)
-		printf("%c %s %d\n", alphabet[i].value, alphabet[i].bits, alphabet[i].freq);
 #endif // DEBUG
 
 
 	std::fstream* auxiliar = new std::fstream("auxiliarHuffman.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
-	
-	if(useAuxiliar)
+
+	auxiliar->write(&settings->offset, 1);
+
+	WriteTree(auxiliar, tree, alphabet);
+
+	for (uint32_t i = 0; i < ALPHABET_SIZE; i++)
 	{
+		if (alphabet[i].freq > 0)
+		{
+#ifdef DEBUG
+			printf("%c %s %d\n", alphabet[i].value, alphabet[i].bits, alphabet[i].freq);
+#endif // DEBUG
+			uint32_t temp = (strlen(alphabet[i].bits) * alphabet[i].freq) % 8;
+			char tempChar = temp;
+			settings->offset = (settings->offset + tempChar) % 8;
+		}
+	}
+	auxiliar->seekp(0);
+	auxiliar->write(&settings->offset, 1);
+	auxiliar->seekp(0, std::ios_base::end);
+
+	if (useAuxiliar)
+	{
+		settings->auxiliar->clear();
 		settings->auxiliar->seekg(0);
-		
 	}
 	else
 	{
-		
+		settings->input->clear();
+		settings->input->seekg(0);
 	}
-	
+
+	uint32_t count = 0;
+	unsigned char byteRead;
+	unsigned char byteWrite = 0;
 	while (true)
 	{
-		TYPE readType;
 		if (useAuxiliar)
 		{
 
-			settings->auxiliar->read((char*)&readType, sizeof(TYPE));
+			settings->auxiliar->read((char*)&byteRead, 1);
 			if (settings->auxiliar->eof())
 				break;
 		}
 		else
 		{
-			settings->input->read((char*)&readType, sizeof(TYPE));
+			settings->input->read((char*)&byteRead, 1);
 			if (settings->input->eof())
 				break;
 		}
+		char* bits = alphabet[(uint32_t)byteRead].bits;
+		uint32_t bitsSize = strlen(bits);
+		for (int i = 0; i < bitsSize; i++)
+		{
+			int index = 7 - count;
+			if(bits[i] == '1')
+				byteWrite += 1 << index;
+			count++;
+			if (count % 8 == 0)
+			{
+#ifdef DEBUG
+				std::cout << byteWrite;
+#endif // DEBUG
+				auxiliar->put(byteWrite);
+				byteWrite = 0;
+				count = 0;
+			}
+		}
 	}
+	if(settings->offset > 0)
+		auxiliar->write((char*)&byteWrite, 1);
+
+	if (settings->auxiliar != nullptr)
+	{
+		settings->auxiliar->close();
+		delete settings->auxiliar;
+	}
+	auxiliar->flush();
+	settings->auxiliar = auxiliar;
 }
 
 void Huffman::Decode(Settings* settings, bool useAuxiliar)
 {
+	Node* tree;
+	char byteRead;
+	std::streampos inputSize, position;
+
+	if (useAuxiliar)
+	{
+		settings->auxiliar->clear();
+		settings->auxiliar->seekg(0, std::ios_base::end);
+		inputSize = settings->auxiliar->tellg();
+		settings->auxiliar->seekg(0);
+		settings->auxiliar->read(&settings->offset, 1);
+		ReadTree(settings->auxiliar, &tree);
+	}
+	else
+	{
+		settings->input->clear();
+		settings->input->seekg(0, std::ios_base::end);
+		inputSize = settings->input->tellg();
+		settings->input->seekg(0);
+		settings->input->read(&settings->offset, 1);
+		ReadTree(settings->input, &tree);
+	}
+
+#ifdef DEBUG
+	PrintTree(tree);
+#endif
+
+	std::fstream* auxiliar = new std::fstream("auxiliarHuffman.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+
+	//auxiliar->write((char*)&settings->offset, sizeof(settings->offset));
+	Node* currentNode = tree;
+	uint32_t sizeRead = 0;
+	while (true)
+	{
+		if (useAuxiliar)
+		{
+			settings->auxiliar->read(&byteRead, 1);
+			if (settings->auxiliar->eof())
+				break;
+			position = settings->auxiliar->tellg();
+		}
+		else
+		{
+			settings->input->read(&byteRead, 1);
+			if (settings->input->eof())
+				break;
+			position = settings->input->tellg();
+		}
+
+		for (int i = 7; i >= 0 && (position != inputSize || i > 7 - settings->offset); i--)
+		{
+			if (currentNode->left == nullptr && currentNode->right == nullptr)
+			{
+				auxiliar->put(currentNode->value);
+				currentNode = tree;
+			}
+			bool bit = GETBIT(byteRead, i);
+			if (bit)
+				currentNode = currentNode->right;
+			else
+				currentNode = currentNode->left;
+		}
+		sizeRead += 8;
+	}
+
+	if (settings->auxiliar != nullptr)
+	{
+		settings->auxiliar->close();
+		delete settings->auxiliar;
+	}
+	auxiliar->flush();
+	settings->auxiliar = auxiliar;
 }

@@ -7,26 +7,31 @@
 #include "settings.h"
 
 #define ALPHABET_SIZE 256
-#define TYPE unsigned char
 
 struct Node
 {
 	struct Node* left;
 	struct Node* right;
 	uint32_t freq;
-	TYPE value;
+	unsigned char value;
 };
 
 struct Alphabet
 {
 	char* bits;
-	TYPE value;
+	unsigned char value;
 	uint32_t freq;
 };
 
 class Huffman
 {
-	static void CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, uint32_t& size, bool useAuxiliar);
+	static bool SortFrequencies(Alphabet a, Alphabet b);
+	static void PrintTree(Node* tree);
+	static void CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint32_t size);
+	static void WriteTree(std::fstream* file, Node* node, Alphabet* alphabet);
+	static void ReadTree(std::istream* file, Node** node);
+
+	static void CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, bool useAuxiliar);
 public:
 	static void Encode(Settings* settings, bool useAuxiliar = false);
 	static void Decode(Settings* settings, bool useAuxiliar = false);

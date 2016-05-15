@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
 	ReadArgs(settings, argc, argv);
 #endif
 
-	settings.input = new std::ifstream(settings.inputFilename);
+	settings.input = new std::ifstream(settings.inputFilename, std::ofstream::binary);
 	if (settings.input->exceptions())
 	{
 		std::cerr << "Error: Opening input file" << std::endl;
@@ -189,6 +189,7 @@ int main(int argc, char *argv[]) {
 	else
 		std::cerr << "Error: Encode/Decode not defined" << std::endl;
 
+	settings.auxiliar->clear();
 	settings.auxiliar->seekg(0);
 	settings.output->seekp(0);
 
