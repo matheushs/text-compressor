@@ -1,1 +1,0 @@
-encode.exe -i input.txt -o encoded.dat --bwt=false --txtblck=64 --huffman=false --runl=true

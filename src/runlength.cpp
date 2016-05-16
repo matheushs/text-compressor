@@ -3,8 +3,10 @@
 #include <vector>
 #include <bitset>
 
+// Codifica usando run-length bit a bit
 void RunLength::Encode(Settings* settings, bool useAuxiliar)
 {
+	// Estado binario, nao e necessario escrever o estado, comeca contagens de bits 0 e troca o current
 	uint16_t count = 0;
 	bool current = false;
 	unsigned char byteRead;
@@ -46,6 +48,7 @@ void RunLength::Encode(Settings* settings, bool useAuxiliar)
 				break;
 		}
 
+		// Conta bits dentro do byteRead e conta bits iguais
 		for (int i = 0; i < 8 && (position != end || i < settings->offset); i++)
 		{
 			int index = 7 - i;
@@ -78,6 +81,7 @@ void RunLength::Encode(Settings* settings, bool useAuxiliar)
 	settings->auxiliar = auxiliar;
 }
 
+// Decodifica run-length bit a bit
 void RunLength::Decode(Settings* settings, bool useAuxiliar)
 {
 	std::streampos end, position;
@@ -100,6 +104,7 @@ void RunLength::Decode(Settings* settings, bool useAuxiliar)
 		settings->input->read((char*)&settings->offset, 1);
 	}
 
+	// Estado binario, nao e necessario escrever o estado, comeca contagens de bits 0 e troca o current
 	uint16_t count;
 	bool current = false;
 	unsigned char bitWrite = 0;
@@ -120,9 +125,12 @@ void RunLength::Decode(Settings* settings, bool useAuxiliar)
 			if (settings->input->eof() || position == end)
 				break;
 		}
+
 #ifdef DEBUG
 		std::cout << count << ",";
 #endif // DEBUG
+
+		// Cria bits dentro do byteWrite dependendo do tamanho
 		int shift = current == true ? 0 : 1;
 		for (int i = 0; i < count; i++)
 		{
@@ -143,6 +151,7 @@ void RunLength::Decode(Settings* settings, bool useAuxiliar)
 	}
 	byteWrite = '\n';
 	auxiliar->put(byteWrite);
+
 #ifdef DEBUG
 	std::cout << std::endl;
 #endif // DEBUG

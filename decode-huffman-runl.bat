@@ -1,1 +1,0 @@
-decode.exe -i encoded.dat -o decoded.txt --bwt=false --txtblck=64 --huffman=true --runl=true

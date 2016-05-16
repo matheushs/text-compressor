@@ -58,6 +58,10 @@ std::string ToUpper(char* text) {
 #define HUFFMAN_ARG "--huffman="
 #define RUN_LENGTH_ARG "--runl="
 
+
+/*
+Le os argumentos e cria configuracao
+*/
 void ReadArgs(Settings& settings, int argc, char* argv[])
 {
 	if (argc < MIN_ARGS + 1)
@@ -149,7 +153,8 @@ int main(int argc, char *argv[]) {
 #else
 	ReadArgs(settings, argc, argv);
 #endif
-
+	
+	// Abre arquivo para input
 	settings.input = new std::ifstream(settings.inputFilename, std::ofstream::binary);
 	if (settings.input->exceptions())
 	{
@@ -157,6 +162,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	// Abre arquivo para output
 	settings.output = new std::ofstream(settings.outputFilename, std::ofstream::binary | std::ofstream::trunc);
 	if (settings.output->exceptions())
 	{
@@ -168,26 +174,54 @@ int main(int argc, char *argv[]) {
 	if (!settings.runLength && !settings.huffman && !settings.bwt)
 		exit(EXIT_FAILURE);
 
+	// Le do arquivo de input pela primeira vez, codifica e guarda no arquivo auxiliar
+	// A proxima codificacao le o arquivo auxiliar, codifica e guarda em outro arquivo auxiliar
+	// Finalmente le o ultimo arquivo auxiliar e escreve no output
+
+	// Codifica
 	if (ENCODE)
 	{
+		std::cout << "Begining encoding: " << std::endl;
 		if (settings.bwt)
+		{
+			std::cout << "Begining BWT " << settings.textBlockSize << std::endl;
 			BWT::Encode(&settings);
+		}
 		if (settings.huffman)
+		{
+			std::cout << "Begining Huffman" << std::endl;
 			Huffman::Encode(&settings, settings.bwt);
+		}
 		if (settings.runLength)
+		{
+			std::cout << "Begining Run Length" << std::endl;
 			RunLength::Encode(&settings, settings.bwt || settings.huffman);
+		}
 	}
+	// Decodifica
 	else if (DECODE)
 	{
+		std::cout << "Begining decoding: " << std::endl;
 		if (settings.runLength)
+		{
+			std::cout << "Begining Run Length" << std::endl;
 			RunLength::Decode(&settings);
+		}
 		if (settings.huffman)
+		{
+			std::cout << "Begining Huffman" << std::endl;
 			Huffman::Decode(&settings, settings.runLength);
+		}
 		if (settings.bwt)
+		{
+			std::cout << "Begining BWT " << settings.textBlockSize << std::endl;
 			BWT::Decode(&settings, settings.runLength || settings.huffman);
+		}
 	}
 	else
 		std::cerr << "Error: Encode/Decode not defined" << std::endl;
+
+	// Le arquivo auxiliar e copia
 
 	settings.auxiliar->clear();
 	if(ENCODE)
@@ -198,7 +232,7 @@ int main(int argc, char *argv[]) {
 	end = settings.auxiliar->tellg();
 	settings.auxiliar->seekg(0);
 	settings.output->seekp(0);
-
+	// Copia auxiliar para output
 	while (settings.auxiliar->tellg() != end)
 	{
 		char c = settings.auxiliar->get();
@@ -207,6 +241,7 @@ int main(int argc, char *argv[]) {
 		settings.output->put(c);
 	}
 
+	// Clean up
 	settings.auxiliar->close();
 	settings.input->close();
 	settings.output->close();

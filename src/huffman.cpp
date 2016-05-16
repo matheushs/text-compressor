@@ -5,11 +5,13 @@
 #include <algorithm>
 #include <bitset>
 
+// Ordena o alfabeto pela frequencia
 bool Huffman::SortFrequencies(Alphabet a, Alphabet b)
 {
 	return a.freq < b.freq;
 }
 
+// Imprime arvore
 void Huffman::PrintTree(Node* node)
 {
 	bool leaf = (node->left == nullptr) & (node->right == nullptr);
@@ -27,6 +29,7 @@ void Huffman::PrintTree(Node* node)
 	}
 }
 
+// Cria os bits de cada alfabeto
 void Huffman::CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint32_t size)
 {
 	if (!node->left && !node->right)
@@ -47,6 +50,7 @@ void Huffman::CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint
 
 }
 
+// Escreve arvore no arquivo
 void Huffman::WriteTree(std::fstream* file, Node* node, Alphabet* alphabet)
 {
 	bool leaf = (node->left == nullptr) & (node->right == nullptr);
@@ -63,6 +67,7 @@ void Huffman::WriteTree(std::fstream* file, Node* node, Alphabet* alphabet)
 		WriteTree(file, node->right, alphabet);
 }
 
+// Le arvore do arquivo
 void Huffman::ReadTree(std::istream* file, Node** node)
 {
 	char byteRead;
@@ -81,6 +86,7 @@ void Huffman::ReadTree(std::istream* file, Node** node)
 	}
 }
 
+// Libera da memoria arvore
 void Huffman::DeleteTree(Node** node)
 {
 	if ((*node)->right != nullptr)
@@ -91,6 +97,7 @@ void Huffman::DeleteTree(Node** node)
 	*node = nullptr;
 }
 
+// Le o arquivo inteiro e cria o alfabeto e a arvore de Huffman
 void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, bool useAuxiliar)
 {
 	uint32_t size = 0;
@@ -195,6 +202,7 @@ void Huffman::CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet
 	delete str;
 }
 
+// Codifica
 void Huffman::Encode(Settings* settings, bool useAuxiliar)
 {
 	Node* tree;
@@ -209,6 +217,7 @@ void Huffman::Encode(Settings* settings, bool useAuxiliar)
 
 	WriteTree(auxiliar, tree, alphabet);
 
+	// Calcula o offset (bits no caractere final validos)
 	for (uint32_t i = 0; i < ALPHABET_SIZE; i++)
 	{
 		if (alphabet[i].freq > 0)
@@ -269,8 +278,12 @@ void Huffman::Encode(Settings* settings, bool useAuxiliar)
 			if (settings->input->eof())// || position == end)
 				break;
 		}
+		
+		// Bits do byte atual
 		char* bits = alphabet[(uint32_t)byteRead].bits;
 		uint32_t bitsSize = strlen(bits);
+
+		// Escreve dentro de byteWrite os bits do byte atual
 		for (int i = 0; i < bitsSize; i++)
 		{
 			int index = 7 - bitWrite;
@@ -314,6 +327,7 @@ void Huffman::Encode(Settings* settings, bool useAuxiliar)
 	settings->auxiliar = auxiliar;
 }
 
+// Decodifica
 void Huffman::Decode(Settings* settings, bool useAuxiliar)
 {
 	Node* tree;
@@ -372,6 +386,8 @@ void Huffman::Decode(Settings* settings, bool useAuxiliar)
 #ifdef DEBUG
 		std::cout << std::bitset<8>(byteRead);
 #endif // DEBUG
+
+		// Le o byte, percorrendo a arvore e ao chegar na folha escreve o caractere
 		for (int i = 0; i < 8 && (position != last || i < settings->offset + 1); i++)
 		{
 			int index = 7 - i;

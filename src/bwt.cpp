@@ -2,11 +2,7 @@
 
 #include <bitset>
 
-/*
-	@var input String a ser transformada
-	@var line Linha da string original na matriz (escrever no arquivo)
-	@var result Resultado da BWT
-*/
+// Codifica
 void BWT::Encode(Settings* settings, bool useAuxiliar)
 {
 	char byteRead;
@@ -63,20 +59,26 @@ void BWT::Encode(Settings* settings, bool useAuxiliar)
 				count++;
 			}
 		}
-		if (count == settings->textBlockSize - 1 || (quit && count != 0))
+		
+		if (count == settings->textBlockSize || (quit && count != 0))
 		{
 			count = 0;
-			text = BWT::RotateWord(input);
 
+			// Rotaciona a string original
+			BWT::RotateWord(text, input);
+
+			// Ordena
 			std::sort(text.begin(), text.end());
 
+			// Codifica e guarda indice para reconstrucao
 			for (std::vector<std::string>::iterator it = text.begin(); it != text.end(); it++) {
 				if ((*it).compare(input) == 0) {
 					line = std::distance(text.begin(), it);
 				}
 				result.push_back((*it)[(*it).size() - 1]);
 			}
-
+			
+			// Escreve string ordenada 
 			auxiliar->write(result.c_str(), result.size());
 			auxiliar->write((char*)&line, sizeof(line));
 #ifdef DEBUG
@@ -103,11 +105,7 @@ void BWT::Encode(Settings* settings, bool useAuxiliar)
 	settings->auxiliar = auxiliar;
 }
 
-/*
-	@var input String transformada a ser aplicada a transformada reversa
-	@var line Linha onde se encontra a string original (vem do arquivo)
-	@var word Saida da transformarda reversa
-*/
+// Decodifica
 void BWT::Decode(Settings* settings, bool useAuxiliar)
 {
 	char byteRead;
@@ -118,6 +116,9 @@ void BWT::Decode(Settings* settings, bool useAuxiliar)
 	std::string result;
 	std::string input;
 	uint32_t line = 0;
+
+	bool* zeros = (bool*)calloc(settings->textBlockSize, sizeof(bool));
+	bool* control = (bool*)calloc(settings->textBlockSize, sizeof(bool));
 
 	if (useAuxiliar)
 	{
@@ -165,22 +166,27 @@ void BWT::Decode(Settings* settings, bool useAuxiliar)
 			}
 		}
 
-		if (count == settings->textBlockSize - 1 || (quit && count != 0))
+		// Ao terminar de ler o bloco ou chegar no final
+		if (count == settings->textBlockSize || (quit && count != 0))
 		{
 			count = 0;
+			// Le linha da rotacao
 			if(useAuxiliar)
 				settings->auxiliar->read((char*)&line, sizeof(line));
 			else
 				settings->input->read((char*)&line, sizeof(line));
 
-			index = BWT::GetIndex(input);
+			// Indices para reconstruir
+			BWT::GetIndex(index, control, input);
 
+			// Reconstroi a string original
 			for (int i = 0; i < input.length(); i++) {
 				char aux = input[line];
 				result.insert(result.begin(), aux);
 				line = index[line];
 			}
 
+			// Escreve no arquivo
 			auxiliar->write(result.c_str(), result.size());
 #ifdef DEBUG
 			std::cout << result.c_str() << std::bitset<sizeof(line)*8>(line);
@@ -189,6 +195,7 @@ void BWT::Decode(Settings* settings, bool useAuxiliar)
 			index.clear();
 			input.clear();
 			result.clear();
+			std::memcpy(control, zeros, settings->textBlockSize * sizeof(bool));
 		}
 	}
 	unsigned char byteWrite = '\n';
@@ -206,43 +213,38 @@ void BWT::Decode(Settings* settings, bool useAuxiliar)
 	settings->auxiliar = auxiliar;
 }
 
-std::vector<std::string> BWT::RotateWord(std::string word) {
-	std::vector<std::string> ret;
-
+// Rotaciona a palavra
+void BWT::RotateWord(std::vector<std::string> &rotate, std::string& word)
+{
 	for (int i = 0; i < word.size(); i++) {
 		std::string cat;
 
 		cat.append(word, i, std::string::npos);
 		cat.append(word.begin(), word.begin() + i);
-		//cat.replace(0, std::string::npos, cat, i, std::string::npos);
-
-		ret.push_back(cat);
+		rotate.push_back(cat);
 	}
 
-	for (std::vector<std::string>::iterator it = ret.begin(); it != ret.end(); it++) {
+#ifdef DEBUG
+	for (std::vector<std::string>::iterator it = rotate.begin(); it != rotate.end(); it++) {
 		std::cout << *it << std::endl;
 	}
-
-	return ret;
+#endif
 }
 
-std::vector<uint32_t> BWT::GetIndex(std::string ori) {
-	std::string sort(ori);
-	std::vector<uint32_t> index;
-	//std::map<int, bool> control();
-	std::vector<bool> control(ori.length(), false);
+// Retorna vetor de indices para reconstruir a string original
+void BWT::GetIndex(std::vector<std::uint32_t>& index, bool* control, std::string& input)
+{
+	std::string sort(input);
 
 	std::sort(sort.begin(), sort.end());
 
-	for (int i = 0; i < ori.length(); i++) {
+	for (int i = 0; i < input.length(); i++) {
 		for (int j = 0; j < sort.length(); j++) {
-			if (sort[j] == ori[i] && control[j] == false) {
+			if (sort[j] == input[i] && control[j] == false) {
 				control[j] = true;
 				index.push_back(j);
 				break;
 			}
 		}
 	}
-
-	return index;
 }
