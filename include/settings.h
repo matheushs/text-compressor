@@ -13,7 +13,7 @@ struct Settings
 	bool runLength = false;
 
 	uint32_t textBlockSize = 0;
-	char offset = 0;
+	unsigned char offset = 7;
 
 	std::string inputFilename;
 	std::string outputFilename;

@@ -15,5 +15,5 @@ public:
 	static void Decode(Settings* settings, bool useAuxiliar = false);
 private:
 	static std::vector<std::string> RotateWord(std::string word);
-	static std::vector<int> GetIndex(std::string ori);
+	static std::vector<uint32_t> GetIndex(std::string ori);
 };

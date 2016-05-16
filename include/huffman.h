@@ -30,6 +30,7 @@ class Huffman
 	static void CreateHuffmanBits(Node* node, Alphabet* alphabet, char* bits, uint32_t size);
 	static void WriteTree(std::fstream* file, Node* node, Alphabet* alphabet);
 	static void ReadTree(std::istream* file, Node** node);
+	static void DeleteTree(Node** node);
 
 	static void CreateHuffman(Settings* settings, Node** root, Alphabet** alphabet, bool useAuxiliar);
 public:

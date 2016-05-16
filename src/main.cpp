@@ -132,10 +132,10 @@ int main(int argc, char *argv[]) {
 
 	Settings settings;
 #ifdef DEBUG
-	settings.bwt = false;
+	settings.bwt = true;
 	settings.huffman = true;
 	settings.runLength = true;
-	settings.textBlockSize = 64;
+	settings.textBlockSize = 4;
 	if (ENCODE)
 	{
 		settings.inputFilename = "input.txt";
@@ -190,10 +190,16 @@ int main(int argc, char *argv[]) {
 		std::cerr << "Error: Encode/Decode not defined" << std::endl;
 
 	settings.auxiliar->clear();
+	if(ENCODE)
+		settings.auxiliar->seekg(0, std::ios_base::end);
+	else
+		settings.auxiliar->seekg(-1, std::ios_base::end);
+	std::streampos end;
+	end = settings.auxiliar->tellg();
 	settings.auxiliar->seekg(0);
 	settings.output->seekp(0);
 
-	while (!settings.auxiliar->eof())
+	while (settings.auxiliar->tellg() != end)
 	{
 		char c = settings.auxiliar->get();
 		if (settings.auxiliar->eof())
