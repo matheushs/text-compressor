@@ -186,36 +186,61 @@ int main(int argc, char *argv[]) {
 		{
 			std::cout << "Begining BWT " << settings.textBlockSize << std::endl;
 			BWT::Encode(&settings);
+
+			if (settings.runLength)
+			{
+				std::cout << "Begining Run Length Byte" << std::endl;
+				RunLength::EncodeByte(&settings, true);
+			}
 		}
 		if (settings.huffman)
 		{
 			std::cout << "Begining Huffman" << std::endl;
 			Huffman::Encode(&settings, settings.bwt);
+
+			if (settings.runLength)
+			{
+				std::cout << "Begining Run Length Bit" << std::endl;
+				RunLength::EncodeBit(&settings, settings.bwt || settings.huffman);
+			}
 		}
-		if (settings.runLength)
+		if (settings.runLength && !settings.bwt && !settings.huffman)
 		{
-			std::cout << "Begining Run Length" << std::endl;
-			RunLength::Encode(&settings, settings.bwt || settings.huffman);
+			std::cout << "Begining Run Length Byte" << std::endl;
+			RunLength::EncodeByte(&settings, false);
 		}
 	}
 	// Decodifica
 	else if (DECODE)
 	{
 		std::cout << "Begining decoding: " << std::endl;
-		if (settings.runLength)
+
+		if (settings.runLength && !settings.bwt && !settings.huffman)
 		{
-			std::cout << "Begining Run Length" << std::endl;
-			RunLength::Decode(&settings);
+			std::cout << "Begining Run Length Byte" << std::endl;
+			RunLength::DecodeByte(&settings, false);
 		}
 		if (settings.huffman)
 		{
+			if (settings.runLength)
+			{
+				std::cout << "Begining Run Length Bit" << std::endl;
+				RunLength::DecodeBit(&settings, settings.bwt || settings.huffman);
+			}
+
 			std::cout << "Begining Huffman" << std::endl;
-			Huffman::Decode(&settings, settings.runLength);
+			Huffman::Decode(&settings, settings.bwt);
 		}
 		if (settings.bwt)
 		{
+			if (settings.runLength)
+			{
+				std::cout << "Begining Run Length Byte" << std::endl;
+				RunLength::DecodeByte(&settings, true);
+			}
+
 			std::cout << "Begining BWT " << settings.textBlockSize << std::endl;
-			BWT::Decode(&settings, settings.runLength || settings.huffman);
+			BWT::Decode(&settings);
 		}
 	}
 	else

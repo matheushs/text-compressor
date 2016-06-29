@@ -9,6 +9,8 @@
 class RunLength
 {
 public:
-	static void Encode(Settings* settings, bool useAuxiliar = false);
-	static void Decode(Settings* settings, bool useAuxiliar = false);
+	static void EncodeByte(Settings* settings, bool useAuxiliar = false);
+	static void DecodeByte(Settings* settings, bool useAuxiliar = false);
+	static void EncodeBit(Settings* settings, bool useAuxiliar = false);
+	static void DecodeBit(Settings* settings, bool useAuxiliar = false);
 };
