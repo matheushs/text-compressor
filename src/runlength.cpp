@@ -13,7 +13,7 @@ void RunLength::EncodeByte(Settings* settings, bool useAuxiliar)
 	char byteRead;
 	std::streampos end, position;
 
-	std::fstream* auxiliar = new std::fstream("auxiliarRunLength.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("Run-Length Encode Byte.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
 	if (useAuxiliar)
 	{
@@ -87,7 +87,7 @@ void RunLength::DecodeByte(Settings* settings, bool useAuxiliar)
 {
 	std::streampos end, position;
 
-	std::fstream* auxiliar = new std::fstream("auxiliarRunLength.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("Run-Length Decode Byte.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 	if (useAuxiliar)
 	{
 		settings->auxiliar->clear();
@@ -132,8 +132,6 @@ void RunLength::DecodeByte(Settings* settings, bool useAuxiliar)
 
 		while (count--)
 			auxiliar->write(&current, 1);
-
-	}
 		
 	}
 
@@ -159,7 +157,7 @@ void RunLength::EncodeBit(Settings* settings, bool useAuxiliar)
 	unsigned char byteRead;
 	std::streampos end, position;
 
-	std::fstream* auxiliar = new std::fstream("auxiliarRunLength.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("Run-Length Encode Bit.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
 	if (useAuxiliar)
 	{
@@ -233,7 +231,7 @@ void RunLength::DecodeBit(Settings* settings, bool useAuxiliar)
 {
 	std::streampos end, position;
 
-	std::fstream* auxiliar = new std::fstream("auxiliarRunLength.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("Run-Length Decode Bit.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 	if (useAuxiliar)
 	{
 		settings->auxiliar->clear();

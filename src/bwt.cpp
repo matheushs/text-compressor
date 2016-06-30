@@ -30,7 +30,7 @@ void BWT::Encode(Settings* settings, bool useAuxiliar)
 	}
 
 
-	std::fstream* auxiliar = new std::fstream("auxiliarBWT.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("BWT Encode.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
 	while (!quit)
 	{
@@ -136,7 +136,7 @@ void BWT::Decode(Settings* settings, bool useAuxiliar)
 	}
 
 
-	std::fstream* auxiliar = new std::fstream("auxiliarBWT.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("BWT Decode.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
 	while (!quit)
 	{

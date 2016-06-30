@@ -211,7 +211,7 @@ void Huffman::Encode(Settings* settings, bool useAuxiliar)
 
 	CreateHuffman(settings, &tree, &alphabet, useAuxiliar);
 
-	std::fstream* auxiliar = new std::fstream("auxiliarHuffman.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("Huffman Encode.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
 	auxiliar->write((char*)&settings->offset, 1);
 
@@ -363,7 +363,7 @@ void Huffman::Decode(Settings* settings, bool useAuxiliar)
 	std::cout << std::endl;
 #endif
 
-	std::fstream* auxiliar = new std::fstream("auxiliarHuffman.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
+	std::fstream* auxiliar = new std::fstream("Huffman Decode.dat", std::ios::in | std::ios::out | std::ios::binary | std::ofstream::trunc);
 
 	Node* currentNode = tree;
 	while (true)

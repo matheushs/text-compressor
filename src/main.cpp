@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
 	settings.bwt = true;
 	settings.huffman = true;
 	settings.runLength = true;
-	settings.textBlockSize = 4;
+	settings.textBlockSize = 64;
 	if (ENCODE)
 	{
 		settings.inputFilename = "input.txt";
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
 			if (settings.runLength)
 			{
 				std::cout << "Begining Run Length Byte" << std::endl;
-				RunLength::EncodeByte(&settings, true);
+				//RunLength::EncodeByte(&settings, true);
 			}
 		}
 		if (settings.huffman)
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 			if (settings.runLength)
 			{
 				std::cout << "Begining Run Length Bit" << std::endl;
-				RunLength::EncodeBit(&settings, settings.bwt || settings.huffman);
+				//RunLength::EncodeBit(&settings, true);
 			}
 		}
 		if (settings.runLength && !settings.bwt && !settings.huffman)
@@ -225,22 +225,23 @@ int main(int argc, char *argv[]) {
 			if (settings.runLength)
 			{
 				std::cout << "Begining Run Length Bit" << std::endl;
-				RunLength::DecodeBit(&settings, settings.bwt || settings.huffman);
+				//RunLength::DecodeBit(&settings, false);
 			}
 
 			std::cout << "Begining Huffman" << std::endl;
-			Huffman::Decode(&settings, settings.bwt);
+			//Huffman::Decode(&settings, settings.runLength);
+			Huffman::Decode(&settings, false);
 		}
 		if (settings.bwt)
 		{
 			if (settings.runLength)
 			{
 				std::cout << "Begining Run Length Byte" << std::endl;
-				RunLength::DecodeByte(&settings, true);
+				//RunLength::DecodeByte(&settings, settings.huffman);
 			}
 
 			std::cout << "Begining BWT " << settings.textBlockSize << std::endl;
-			BWT::Decode(&settings);
+			BWT::Decode(&settings, true);
 		}
 	}
 	else
