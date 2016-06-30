@@ -8,7 +8,7 @@
 void RunLength::EncodeByte(Settings* settings, bool useAuxiliar)
 {
 	// Estado binario, nao e necessario escrever o estado, comeca contagens de bits 0 e troca o current
-	uint16_t count = 0;
+	char count = 0;
 	char current;
 	char byteRead;
 	std::streampos end, position;
@@ -105,7 +105,7 @@ void RunLength::DecodeByte(Settings* settings, bool useAuxiliar)
 		settings->input->read((char*)&settings->offset, 1);
 	}
 
-	uint16_t count;
+	char count;
 	char current;
 	while (true)
 	{
@@ -152,7 +152,7 @@ void RunLength::DecodeByte(Settings* settings, bool useAuxiliar)
 void RunLength::EncodeBit(Settings* settings, bool useAuxiliar)
 {
 	// Estado binario, nao e necessario escrever o estado, comeca contagens de bits 0 e troca o current
-	uint16_t count = 0;
+	char count = 0;
 	bool current = false;
 	unsigned char byteRead;
 	std::streampos end, position;
@@ -250,7 +250,7 @@ void RunLength::DecodeBit(Settings* settings, bool useAuxiliar)
 	}
 
 	// Estado binario, nao e necessario escrever o estado, comeca contagens de bits 0 e troca o current
-	uint16_t count;
+	char count;
 	bool current = false;
 	unsigned char bitWrite = 0;
 	unsigned char byteWrite = UCHAR_MAX;

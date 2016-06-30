@@ -20,6 +20,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include "settings.h"
 #include "runlength.h"
 #include "huffman.h"
@@ -174,6 +175,8 @@ int main(int argc, char *argv[]) {
 	if (!settings.runLength && !settings.huffman && !settings.bwt)
 		exit(EXIT_FAILURE);
 
+	time_t after, before;
+
 	// Le do arquivo de input pela primeira vez, codifica e guarda no arquivo auxiliar
 	// A proxima codificacao le o arquivo auxiliar, codifica e guarda em outro arquivo auxiliar
 	// Finalmente le o ultimo arquivo auxiliar e escreve no output
@@ -185,29 +188,44 @@ int main(int argc, char *argv[]) {
 		if (settings.bwt)
 		{
 			std::cout << "Begining BWT " << settings.textBlockSize << std::endl;
-			BWT::Encode(&settings);
+			before = time(NULL);
+			BWT::Encode(&settings, false);
+			after = time(NULL);
+			std::cout << difftime(after, before) << std::endl;
 
 			if (settings.runLength)
 			{
 				std::cout << "Begining Run Length Byte" << std::endl;
-				//RunLength::EncodeByte(&settings, true);
+				before = time(NULL);
+				RunLength::EncodeByte(&settings, true);
+				after = time(NULL);
+				std::cout << difftime(after, before) << std::endl;
 			}
 		}
 		if (settings.huffman)
 		{
-			std::cout << "Begining Huffman" << std::endl;
-			Huffman::Encode(&settings, settings.bwt);
-
-			if (settings.runLength)
+			if (settings.runLength && !settings.bwt)
 			{
 				std::cout << "Begining Run Length Bit" << std::endl;
-				//RunLength::EncodeBit(&settings, true);
+				before = time(NULL);
+				RunLength::EncodeByte(&settings, false);
+				after = time(NULL);
+				std::cout << difftime(after, before) << std::endl;
 			}
+
+			std::cout << "Begining Huffman" << std::endl;
+			before = time(NULL);
+			Huffman::Encode(&settings, settings.bwt | settings.runLength);
+			after = time(NULL);
+			std::cout << difftime(after, before) << std::endl;
 		}
 		if (settings.runLength && !settings.bwt && !settings.huffman)
 		{
 			std::cout << "Begining Run Length Byte" << std::endl;
+			before = time(NULL);
 			RunLength::EncodeByte(&settings, false);
+			after = time(NULL);
+			std::cout << difftime(after, before) << std::endl;
 		}
 	}
 	// Decodifica
@@ -218,30 +236,44 @@ int main(int argc, char *argv[]) {
 		if (settings.runLength && !settings.bwt && !settings.huffman)
 		{
 			std::cout << "Begining Run Length Byte" << std::endl;
+			before = time(NULL);
 			RunLength::DecodeByte(&settings, false);
+			after = time(NULL);
+			std::cout << difftime(after, before) << std::endl;
 		}
 		if (settings.huffman)
 		{
-			if (settings.runLength)
+			std::cout << "Begining Huffman" << std::endl;
+			before = time(NULL);
+			Huffman::Decode(&settings, false);
+			after = time(NULL);
+			std::cout << difftime(after, before) << std::endl;
+
+			if (settings.runLength && !settings.bwt)
 			{
 				std::cout << "Begining Run Length Bit" << std::endl;
-				//RunLength::DecodeBit(&settings, false);
+				before = time(NULL);
+				RunLength::EncodeByte(&settings, true);
+				after = time(NULL);
+				std::cout << difftime(after, before) << std::endl;
 			}
-
-			std::cout << "Begining Huffman" << std::endl;
-			//Huffman::Decode(&settings, settings.runLength);
-			Huffman::Decode(&settings, false);
 		}
 		if (settings.bwt)
 		{
 			if (settings.runLength)
 			{
 				std::cout << "Begining Run Length Byte" << std::endl;
-				//RunLength::DecodeByte(&settings, settings.huffman);
+				before = time(NULL);
+				RunLength::DecodeByte(&settings, settings.huffman);
+				after = time(NULL);
+				std::cout << difftime(after, before) << std::endl;
 			}
 
 			std::cout << "Begining BWT " << settings.textBlockSize << std::endl;
-			BWT::Decode(&settings, true);
+			before = time(NULL);
+			BWT::Decode(&settings, settings.runLength | settings.huffman);
+			after = time(NULL);
+			std::cout << difftime(after, before) << std::endl;
 		}
 	}
 	else
