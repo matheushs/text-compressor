@@ -153,6 +153,11 @@ int main(int argc, char *argv[]) {
 	}
 #else
 	ReadArgs(settings, argc, argv);
+	std::cout << settings.inputFilename << std::endl;
+	std::cout << settings.outputFilename << std::endl;
+	std::cout << "BWT: " << settings.bwt << std::endl;
+	std::cout << "HUFFMAN: " << settings.huffman << std::endl;
+	std::cout << "RUN LENGTH: " << settings.runLength << std::endl;
 #endif
 	
 	// Abre arquivo para input
@@ -206,7 +211,7 @@ int main(int argc, char *argv[]) {
 		{
 			if (settings.runLength && !settings.bwt)
 			{
-				std::cout << "Begining Run Length Bit" << std::endl;
+				std::cout << "Begining Run Length Byte" << std::endl;
 				before = time(NULL);
 				RunLength::EncodeByte(&settings, false);
 				after = time(NULL);
@@ -251,9 +256,9 @@ int main(int argc, char *argv[]) {
 
 			if (settings.runLength && !settings.bwt)
 			{
-				std::cout << "Begining Run Length Bit" << std::endl;
+				std::cout << "Begining Run Length Byte" << std::endl;
 				before = time(NULL);
-				RunLength::EncodeByte(&settings, true);
+				RunLength::DecodeByte(&settings, true);
 				after = time(NULL);
 				std::cout << difftime(after, before) << std::endl;
 			}
